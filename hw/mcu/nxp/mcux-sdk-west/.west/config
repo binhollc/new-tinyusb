@@ -1,0 +1,4 @@
+[manifest]
+path = mcux-sdk
+file = west.yml
+
