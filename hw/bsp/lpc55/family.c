@@ -175,25 +175,53 @@ void board_init(void)
   USART_Init(UART_DEV, &uart_config, 12000000);
 #endif
 
+#ifdef CPU_LPC55S36JBD100
+  // USB VBUS
+  /* PORT1 PIN33 configured as USB0_VBUS */
+
+  const uint32_t port1_pin31_config = (/* Pin is configured as USB0_VBUS */
+                                       IOCON_PIO_FUNC7 |
+                                       /* No addition pin function */
+                                       IOCON_PIO_MODE_INACT |
+                                       /* Standard mode, output slew rate control is enabled */
+                                       IOCON_PIO_SLEW_STANDARD |
+                                       /* Input function is not inverted */
+                                       IOCON_PIO_INV_DI |
+                                       /* Enables digital function */
+                                       IOCON_PIO_DIGITAL_EN |
+                                       /* Open drain is disabled */
+                                       IOCON_PIO_OPENDRAIN_DI);
+
+  /* PORT1 PIN31 (coords: 92) is configured as USB0_VBUS */
+  IOCON_PinMuxSet(IOCON, 1U, 31U, port1_pin31_config);
+#else
   // USB VBUS
   /* PORT0 PIN22 configured as USB0_VBUS */
   IOCON_PinMuxSet(IOCON, 0U, 22U, IOCON_PIO_DIG_FUNC7_EN);
+#endif
 
 #if PORT_SUPPORT_DEVICE(0)
   // Port0 is Full Speed
 
-  /* Turn on USB0 Phy */
-  POWER_DisablePD(kPDRUNCFG_PD_USB0_PHY);
+#ifdef CPU_LPC55S36JBD100
+  POWER_DisablePD(kPDRUNCFG_PD_USBFSPHY);   //Turn on USB0 Phy
+  RESET_PeripheralReset(kUSB0_DEV_RST_SHIFT_RSTn); //Reset the IP to make sure it's in reset state
+#else
+  POWER_DisablePD(kPDRUNCFG_PD_USB0_PHY);     //Turn on USB0 Phy
+  RESET_PeripheralReset(kUSB0D_RST_SHIFT_RSTn);   //Reset the IP to make sure it's in reset state
+#endif
 
-  /* reset the IP to make sure it's in reset state. */
-  RESET_PeripheralReset(kUSB0D_RST_SHIFT_RSTn);
   RESET_PeripheralReset(kUSB0HSL_RST_SHIFT_RSTn);
   RESET_PeripheralReset(kUSB0HMR_RST_SHIFT_RSTn);
 
   // Enable USB Clock Adjustments to trim the FRO for the full speed controller
   ANACTRL->FRO192M_CTRL |= ANACTRL_FRO192M_CTRL_USBCLKADJ_MASK;
   CLOCK_SetClkDiv(kCLOCK_DivUsb0Clk, 1, false);
+#ifdef CPU_LPC55S36JBD100
+  CLOCK_AttachClk(kFRO_HF_to_USB0);
+#else
   CLOCK_AttachClk(kFRO_HF_to_USB0_CLK);
+#endif
 
   /*According to reference manual, device mode setting has to be set by access usb host register */
   CLOCK_EnableClock(kCLOCK_Usbhsl0);  // enable usb0 host clock
