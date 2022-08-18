@@ -59,4 +59,10 @@ INC += \
 
 SRC_S += $(MCU_DIR)/gcc/startup_$(MCU_CORE).S
 
+ifneq ($(BOARD),lpcxpresso55s36)
 LIBS += $(TOP)/$(MCU_DIR)/gcc/libpower_hardabi.a
+endif
+
+
+# For freeRTOS port source
+FREERTOS_PORT = ARM_CM33_NTZ/non_secure
