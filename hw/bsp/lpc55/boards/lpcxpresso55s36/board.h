@@ -34,7 +34,7 @@
 // LED
 #define LED_PORT              1
 #define LED_PIN               28
-#define LED_STATE_ON          0
+#define LED_STATE_ON          1
 
 // WAKE button
 #define BUTTON_PORT           1
@@ -48,6 +48,21 @@
 
 // XTAL
 #define XTAL0_CLK_HZ          (16 * 1000 * 1000U)
+
+//--------------------------------------------------------------------+
+// Neopixel
+//--------------------------------------------------------------------+
+
+// Number of neopixels
+#define NEOPIXEL_NUMBER       2
+#define NEOPIXEL_PORT         1
+#define NEOPIXEL_PIN          8
+#define NEOPIXEL_IOMUX        IOCON_PIO_DIG_FUNC4_EN
+#define NEOPIXEL_CH           1
+#define NEOPIXEL_TYPE         0
+
+ // Brightness percentage from 1 to 255
+#define NEOPIXEL_BRIGHTNESS   0xF0
 
 #ifdef __cplusplus
  }

@@ -34,7 +34,10 @@
 
 #ifdef NEOPIXEL_PIN
 #include "fsl_sctimer.h"
+
+#if NEOPIXEL_NUMBER
 #include "sct_neopixel.h"
+static uint32_t pixelData[NEOPIXEL_NUMBER] = {0};
 #endif
 
 #ifdef BOARD_TUD_RHPORT
@@ -141,19 +144,15 @@ void board_init(void)
   gpio_pin_config_t const led_config = { kGPIO_DigitalOutput, 1};
   GPIO_PinInit(GPIO, LED_PORT, LED_PIN, &led_config);
 
-  board_led_write(0);
-
-#ifdef NEOPIXEL_PIN
-  // Neopixel
-  static uint32_t pixelData[NEOPIXEL_NUMBER];
-  IOCON_PinMuxSet(IOCON, NEOPIXEL_PORT, NEOPIXEL_PIN, IOCON_PIO_DIG_FUNC4_EN);
+#if NEOPIXEL_NUMBER
+  IOCON_PinMuxSet(IOCON, NEOPIXEL_PORT, NEOPIXEL_PIN, NEOPIXEL_IOMUX);
 
   sctpix_init(NEOPIXEL_TYPE);
   sctpix_addCh(NEOPIXEL_CH, pixelData, NEOPIXEL_NUMBER);
-  sctpix_setPixel(NEOPIXEL_CH, 0, 0x100010);
-  sctpix_setPixel(NEOPIXEL_CH, 1, 0x100010);
-  sctpix_show();
 #endif
+
+  // board_led_write calls to sct_show(), so it is neccesary call it after sctpix_init().
+  board_led_write(0);
 
   // Button
   IOCON_PinMuxSet(IOCON, BUTTON_PORT, BUTTON_PIN, IOCON_PIO_DIG_FUNC0_EN);
@@ -282,15 +281,18 @@ void board_led_write(bool state)
 {
   GPIO_PinWrite(GPIO, LED_PORT, LED_PIN, state ? LED_STATE_ON : (1-LED_STATE_ON));
 
-#ifdef NEOPIXEL_PIN
+#if NEOPIXEL_NUMBER
   if (state) {
-    sctpix_setPixel(NEOPIXEL_CH, 0, 0x100000);
-    sctpix_setPixel(NEOPIXEL_CH, 1, 0x101010);
+    sctpix_setPixel(NEOPIXEL_CH, 0, 0xFF0000);
+    sctpix_setPixel(NEOPIXEL_CH, 1, 0xFF0000);
+    sctpix_setPixel(NEOPIXEL_CH, 2, 0xFF0000);
   } else {
-    sctpix_setPixel(NEOPIXEL_CH, 0, 0x001000);
-    sctpix_setPixel(NEOPIXEL_CH, 1, 0x000010);
+    sctpix_setPixel(NEOPIXEL_CH, 0, 0x000000);
+    sctpix_setPixel(NEOPIXEL_CH, 1, 0x000000);
+    sctpix_setPixel(NEOPIXEL_CH, 2, 0x000000);
   }
   sctpix_show();
+
 #endif
 }
 
