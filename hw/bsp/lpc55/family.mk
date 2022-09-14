@@ -43,7 +43,7 @@ SRC_C += \
 	$(SDK_DIR)/drivers/common/fsl_common_arm.c \
 	$(SDK_DIR)/drivers/flexcomm/fsl_flexcomm.c \
 	$(SDK_DIR)/drivers/flexcomm/fsl_usart.c \
-	lib/sct_neopixel/sct_neopixel.c
+	lib/sct_neopixel-binho/sct_neopixel.c
 
 INC += \
 	$(TOP)/$(BOARD_PATH) \
