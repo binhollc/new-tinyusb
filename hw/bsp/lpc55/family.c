@@ -163,13 +163,49 @@ void BootClockPLL150M(void)
     SystemCoreClock = 150000000U;
 }
 
+void BootClockPLL150MFromFRO12M(void)
+{
+    /*!< Set up the clock sources */
+    /*!< Configure FRO192M */
+    POWER_PowerInit();                                   /*!< Power Management Controller initialization */
+    POWER_DisablePD(kPDRUNCFG_PD_FRO192M);               /*!< Ensure FRO is on  */
+    CLOCK_SetupFROClocking(12000000U);                   /*!< Set up FRO to the 12 MHz, just for sure */
+    CLOCK_AttachClk(kFRO12M_to_MAIN_CLK);                /*!< Switch to FRO 12MHz first to ensure we can change the clock setting */
+
+    POWER_SetVoltageForFreq(150000000U);                  /*!< Set voltage for the one of the fastest clock outputs: System clock output */
+    CLOCK_SetFLASHAccessCyclesForFreq(150000000U);           /*!< Set FLASH wait states for core */
+
+    /*!< Set up PLL */
+    CLOCK_AttachClk(kFRO12M_to_PLL0);                    /*!< Switch PLL0CLKSEL to EXT_CLK */
+    POWER_DisablePD(kPDRUNCFG_PD_PLL0);                  /* Ensure PLL is on  */
+    POWER_DisablePD(kPDRUNCFG_PD_PLL0_SSCG);
+    const pll_setup_t pll0Setup = {
+        .pllctrl = SYSCON_PLL0CTRL_CLKEN_MASK | SYSCON_PLL0CTRL_SELI(53U) | SYSCON_PLL0CTRL_SELP(31U),
+        .pllndec = SYSCON_PLL0NDEC_NDIV(8U),
+        .pllpdec = SYSCON_PLL0PDEC_PDIV(1U),
+        .pllsscg = {0x0U,(SYSCON_PLL0SSCG1_MDIV_EXT(150U) | SYSCON_PLL0SSCG1_SEL_EXT_MASK)},
+        .pllRate = 150000000U,
+        .flags =  PLL_SETUPFLAG_WAITLOCK
+    };
+    CLOCK_SetPLL0Freq(&pll0Setup);                       /*!< Configure PLL0 to the desired values */
+
+    /*!< Set up dividers */
+    CLOCK_SetClkDiv(kCLOCK_DivAhbClk, 1U, false);         /*!< Set AHBCLKDIV divider to value 1 */
+
+    /*!< Set up clock selectors - Attach clocks to the peripheries */
+    CLOCK_AttachClk(kPLL0_to_MAIN_CLK);                 /*!< Switch MAIN_CLK to PLL0 */
+
+    /*!< Set SystemCoreClock variable. */
+    SystemCoreClock = 150000000U;
+}
+
 void board_init(void)
 {
   // Enable IOCON clock
   CLOCK_EnableClock(kCLOCK_Iocon);
 
-  // Init 150 MHz clock
-  BootClockPLL150M();
+  // Init 150 MHz clock from PLL0 and internal FRO12M oscillator.
+  BootClockPLL150MFromFRO12M();
 
   // 1ms tick timer
   SysTick_Config(SystemCoreClock / 1000);
