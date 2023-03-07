@@ -180,12 +180,12 @@ void BootClockPLL150MFromFRO12M(void)
     POWER_DisablePD(kPDRUNCFG_PD_PLL0);                  /* Ensure PLL is on  */
     POWER_DisablePD(kPDRUNCFG_PD_PLL0_SSCG);
     const pll_setup_t pll0Setup = {
-        .pllctrl = SYSCON_PLL0CTRL_CLKEN_MASK | SYSCON_PLL0CTRL_SELI(53U) | SYSCON_PLL0CTRL_SELP(31U),
-        .pllndec = SYSCON_PLL0NDEC_NDIV(8U),
-        .pllpdec = SYSCON_PLL0PDEC_PDIV(1U),
-        .pllsscg = {0x0U,(SYSCON_PLL0SSCG1_MDIV_EXT(150U) | SYSCON_PLL0SSCG1_SEL_EXT_MASK)},
-        .pllRate = 150000000U,
-        .flags =  PLL_SETUPFLAG_WAITLOCK
+	    .pllctrl = SYSCON_PLL0CTRL_CLKEN_MASK | SYSCON_PLL0CTRL_SELI(15U) |SYSCON_PLL0CTRL_SELP(7U),
+	    .pllndec = SYSCON_PLL0NDEC_NDIV(1U),
+	    .pllpdec = SYSCON_PLL0PDEC_PDIV(1U),
+	    .pllsscg = {0x0U,(SYSCON_PLL0SSCG1_MDIV_EXT(25U) | SYSCON_PLL0SSCG1_SEL_EXT_MASK)},
+	    .pllRate = 150000000U,
+	    .flags =  PLL_SETUPFLAG_WAITLOCK
     };
     CLOCK_SetPLL0Freq(&pll0Setup);                       /*!< Configure PLL0 to the desired values */
 
