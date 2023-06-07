@@ -220,9 +220,11 @@ void board_init(void)
   GPIO_PortInit(GPIO, 1);
 
   // LED
+#if LED_ENABLE
   IOCON_PinMuxSet(IOCON, LED_PORT, LED_PIN, IOCON_PIO_DIG_FUNC0_EN);
   gpio_pin_config_t const led_config = { kGPIO_DigitalOutput, 1};
   GPIO_PinInit(GPIO, LED_PORT, LED_PIN, &led_config);
+#endif
 
 #if NEOPIXEL_NUMBER
   IOCON_PinMuxSet(IOCON, NEOPIXEL_PORT, NEOPIXEL_PIN, NEOPIXEL_IOMUX);
@@ -235,9 +237,11 @@ void board_init(void)
   board_led_write(0);
 
   // Button
+#if BUTTON_ENABLE
   IOCON_PinMuxSet(IOCON, BUTTON_PORT, BUTTON_PIN, IOCON_PIO_DIG_FUNC0_EN);
   gpio_pin_config_t const button_config = { kGPIO_DigitalInput, 0};
   GPIO_PinInit(GPIO, BUTTON_PORT, BUTTON_PIN, &button_config);
+#endif
 
 #ifdef UART_DEV
   // UART
@@ -360,7 +364,9 @@ void board_init(void)
 
 void board_led_write(bool state)
 {
+#if LED_ENABLE
   GPIO_PinWrite(GPIO, LED_PORT, LED_PIN, state ? LED_STATE_ON : (1-LED_STATE_ON));
+#endif
 
 #if NEOPIXEL_NUMBER
   if (state) {
@@ -379,8 +385,12 @@ void board_led_write(bool state)
 
 uint32_t board_button_read(void)
 {
+#if BUTTON_ENABLE
   // active low
   return BUTTON_STATE_ACTIVE == GPIO_PinRead(GPIO, BUTTON_PORT, BUTTON_PIN);
+#else
+  return 0;
+#endif
 }
 
 int board_uart_read(uint8_t* buf, int len)

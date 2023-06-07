@@ -35,11 +35,13 @@
 #define LED_PORT              1
 #define LED_PIN               28
 #define LED_STATE_ON          1
+#define LED_ENABLE            0
 
 // WAKE button
 #define BUTTON_PORT           1
 #define BUTTON_PIN            18
 #define BUTTON_STATE_ACTIVE   0
+#define BUTTON_ENABLE         0
 
 // UART
 #define UART_DEV              USART0
@@ -54,7 +56,7 @@
 //--------------------------------------------------------------------+
 
 // Number of neopixels
-#define NEOPIXEL_NUMBER       2
+#define NEOPIXEL_NUMBER       0
 #define NEOPIXEL_PORT         1
 #define NEOPIXEL_PIN          8
 #define NEOPIXEL_IOMUX        IOCON_PIO_DIG_FUNC4_EN
