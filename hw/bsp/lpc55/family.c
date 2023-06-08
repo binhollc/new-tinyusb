@@ -243,6 +243,7 @@ void board_init(void)
   GPIO_PinInit(GPIO, BUTTON_PORT, BUTTON_PIN, &button_config);
 #endif
 
+#if UART_ENABLE
 #ifdef UART_DEV
   // UART
   IOCON_PinMuxSet(IOCON, UART_RX_PINMUX);
@@ -256,6 +257,7 @@ void board_init(void)
   uart_config.enableTx     = true;
   uart_config.enableRx     = true;
   USART_Init(UART_DEV, &uart_config, 12000000);
+#endif
 #endif
 
 #if defined(CPU_LPC5536JBD100) || defined(CPU_LPC5534JBD100)
@@ -401,7 +403,9 @@ int board_uart_read(uint8_t* buf, int len)
 
 int board_uart_write(void const * buf, int len)
 {
+#if UART_ENABLE
   USART_WriteBlocking(UART_DEV, (uint8_t const *) buf, len);
+#endif
   return len;
 }
 
