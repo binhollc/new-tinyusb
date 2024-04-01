@@ -32,7 +32,7 @@
 #endif
 
 // LED
-#define LED_ENABLE            1
+#define LED_ENABLE            0
 #define LED_PORT              1
 #define LED_PIN               6
 #define LED_STATE_ON          0
