@@ -32,16 +32,19 @@
 #endif
 
 // LED
+#define LED_ENABLE            1
 #define LED_PORT              1
 #define LED_PIN               6
 #define LED_STATE_ON          0
 
 // WAKE button
+#define BUTTON_ENABLE         0
 #define BUTTON_PORT           1
 #define BUTTON_PIN            18
 #define BUTTON_STATE_ACTIVE   0
 
 // UART
+#define UART_ENABLE           0
 #define UART_DEV              USART0
 #define UART_RX_PINMUX        0, 29, IOCON_PIO_DIG_FUNC1_EN
 #define UART_TX_PINMUX        0, 30, IOCON_PIO_DIG_FUNC1_EN
