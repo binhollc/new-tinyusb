@@ -96,7 +96,7 @@ linkermap: $(BUILD)/$(PROJECT).elf
 
 # --------------- Jlink -----------------
 ifeq ($(OS),Windows_NT)
-  JLINKEXE = C:\Program Files\SEGGER\JLink\JLink.exe
+  JLINKEXE = JLink.exe
 else
   JLINKEXE = JLinkExe
 endif

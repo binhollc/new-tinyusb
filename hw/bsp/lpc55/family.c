@@ -214,7 +214,7 @@ void board_init(void)
 #endif
 #endif
 
-#if defined(CPU_LPC5536JBD100) || defined(CPU_LPC5534JBD100)
+#if defined(CPU_LPC5536JBD100)
   // USB VBUS
   /* PORT1 PIN33 configured as USB0_VBUS */
 
@@ -242,7 +242,7 @@ void board_init(void)
 #if PORT_SUPPORT_DEVICE(0)
   // Port0 is Full Speed
 
-#if defined(CPU_LPC5536JBD100) || defined(CPU_LPC5534JBD100)
+#if defined(CPU_LPC5536JBD100)
   POWER_DisablePD(kPDRUNCFG_PD_USBFSPHY);   //Turn on USB0 Phy
   RESET_PeripheralReset(kUSB0_DEV_RST_SHIFT_RSTn); //Reset the IP to make sure it's in reset state
 #else
@@ -257,7 +257,7 @@ void board_init(void)
   ANACTRL->FRO192M_CTRL |= ANACTRL_FRO192M_CTRL_USBCLKADJ_MASK;
   CLOCK_SetClkDiv(kCLOCK_DivUsb0Clk, 1, false);
 
-#if defined(CPU_LPC5536JBD100) || defined(CPU_LPC5534JBD100)
+#if defined(CPU_LPC5536JBD100)
   CLOCK_AttachClk(kFRO_HF_to_USB0);
 #else
   CLOCK_AttachClk(kFRO_HF_to_USB0_CLK);
