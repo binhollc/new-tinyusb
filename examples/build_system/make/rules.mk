@@ -69,6 +69,12 @@ else
 	$(RM) -rf $(BUILD)
 endif
 
+.PHONY: rebuild
+rebuild:
+	$(MAKE) clean
+	$(MAKE) all
+# ---------------- GNU Make End -----------------------
+
 # get depenecies
 .PHONY: get-deps
 get-deps:

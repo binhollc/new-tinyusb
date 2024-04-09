@@ -43,7 +43,7 @@ SRC_C += \
 	$(SDK_DIR)/drivers/common/fsl_common_arm.c \
 	$(SDK_DIR)/drivers/flexcomm/fsl_flexcomm.c \
 	$(SDK_DIR)/drivers/flexcomm/fsl_usart.c \
-	lib/sct_neopixel/sct_neopixel.c
+	lib/sct_neopixel-binho/sct_neopixel.c
 
 INC += \
 	$(TOP)/$(BOARD_PATH) \
@@ -59,4 +59,9 @@ INC += \
 
 SRC_S += $(MCU_DIR)/gcc/startup_$(MCU_CORE).S
 
+ifneq ($(MCU_FAMILY), LPC553X_S3X)
 LIBS += $(TOP)/$(MCU_DIR)/gcc/libpower_hardabi.a
+endif
+
+# For freeRTOS port source
+FREERTOS_PORT = ARM_CM33_NTZ/non_secure

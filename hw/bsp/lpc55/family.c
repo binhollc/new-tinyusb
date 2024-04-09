@@ -31,10 +31,12 @@
 #include "fsl_power.h"
 #include "fsl_iocon.h"
 #include "fsl_usart.h"
-
-#ifdef NEOPIXEL_PIN
+#include "fsl_clock.h"
 #include "fsl_sctimer.h"
+
+#if NEOPIXEL_NUMBER
 #include "sct_neopixel.h"
+static uint32_t pixelData[NEOPIXEL_NUMBER] = {0};
 #endif
 
 #ifdef BOARD_TUD_RHPORT
@@ -116,13 +118,48 @@ void BootClockFROHF96M(void)
   SystemCoreClock = 96000000U;
 }
 
+void BootClockPLL150MFromFRO12M(void)
+{
+    /*!< Set up the clock sources */
+    /*!< Configure FRO192M */
+    POWER_DisablePD(kPDRUNCFG_PD_FRO192M);               /*!< Ensure FRO is on  */
+    CLOCK_SetupFROClocking(12000000U);                   /*!< Set up FRO to the 12 MHz, just for sure */
+    CLOCK_AttachClk(kFRO12M_to_MAIN_CLK);                /*!< Switch to FRO 12MHz first to ensure we can change the clock setting */
+
+    POWER_SetVoltageForFreq(150000000U);                  /*!< Set voltage for the one of the fastest clock outputs: System clock output */
+    CLOCK_SetFLASHAccessCyclesForFreq(150000000U);           /*!< Set FLASH wait states for core */
+
+    /*!< Set up PLL */
+    CLOCK_AttachClk(kFRO12M_to_PLL0);                    /*!< Switch PLL0CLKSEL to EXT_CLK */
+    POWER_DisablePD(kPDRUNCFG_PD_PLL0);                  /* Ensure PLL is on  */
+    POWER_DisablePD(kPDRUNCFG_PD_PLL0_SSCG);
+    const pll_setup_t pll0Setup = {
+	    .pllctrl = SYSCON_PLL0CTRL_CLKEN_MASK | SYSCON_PLL0CTRL_SELI(15U) |SYSCON_PLL0CTRL_SELP(7U),
+	    .pllndec = SYSCON_PLL0NDEC_NDIV(1U),
+	    .pllpdec = SYSCON_PLL0PDEC_PDIV(1U),
+	    .pllsscg = {0x0U,(SYSCON_PLL0SSCG1_MDIV_EXT(25U) | SYSCON_PLL0SSCG1_SEL_EXT_MASK)},
+	    .pllRate = 150000000U,
+	    .flags =  PLL_SETUPFLAG_WAITLOCK
+    };
+    CLOCK_SetPLL0Freq(&pll0Setup);                       /*!< Configure PLL0 to the desired values */
+
+    /*!< Set up dividers */
+    CLOCK_SetClkDiv(kCLOCK_DivAhbClk, 1U, false);         /*!< Set AHBCLKDIV divider to value 1 */
+
+    /*!< Set up clock selectors - Attach clocks to the peripheries */
+    CLOCK_AttachClk(kPLL0_to_MAIN_CLK);                 /*!< Switch MAIN_CLK to PLL0 */
+
+    /*!< Set SystemCoreClock variable. */
+    SystemCoreClock = 150000000U;
+}
+
 void board_init(void)
 {
   // Enable IOCON clock
   CLOCK_EnableClock(kCLOCK_Iocon);
 
-  // Init 96 MHz clock
-  BootClockFROHF96M();
+  // Init 150 MHz clock from PLL0 and internal FRO12M oscillator.
+  BootClockPLL150MFromFRO12M();
 
   // 1ms tick timer
   SysTick_Config(SystemCoreClock / 1000);
@@ -137,29 +174,30 @@ void board_init(void)
   GPIO_PortInit(GPIO, 1);
 
   // LED
+#if LED_ENABLE
   IOCON_PinMuxSet(IOCON, LED_PORT, LED_PIN, IOCON_PIO_DIG_FUNC0_EN);
   gpio_pin_config_t const led_config = { kGPIO_DigitalOutput, 1};
   GPIO_PinInit(GPIO, LED_PORT, LED_PIN, &led_config);
+#endif
 
-  board_led_write(0);
-
-#ifdef NEOPIXEL_PIN
-  // Neopixel
-  static uint32_t pixelData[NEOPIXEL_NUMBER];
-  IOCON_PinMuxSet(IOCON, NEOPIXEL_PORT, NEOPIXEL_PIN, IOCON_PIO_DIG_FUNC4_EN);
+#if NEOPIXEL_NUMBER
+  IOCON_PinMuxSet(IOCON, NEOPIXEL_PORT, NEOPIXEL_PIN, NEOPIXEL_IOMUX);
 
   sctpix_init(NEOPIXEL_TYPE);
   sctpix_addCh(NEOPIXEL_CH, pixelData, NEOPIXEL_NUMBER);
-  sctpix_setPixel(NEOPIXEL_CH, 0, 0x100010);
-  sctpix_setPixel(NEOPIXEL_CH, 1, 0x100010);
-  sctpix_show();
 #endif
 
+  // board_led_write calls to sct_show(), so it is neccesary call it after sctpix_init().
+  board_led_write(0);
+
   // Button
+#if BUTTON_ENABLE
   IOCON_PinMuxSet(IOCON, BUTTON_PORT, BUTTON_PIN, IOCON_PIO_DIG_FUNC0_EN);
   gpio_pin_config_t const button_config = { kGPIO_DigitalInput, 0};
   GPIO_PinInit(GPIO, BUTTON_PORT, BUTTON_PIN, &button_config);
+#endif
 
+#if UART_ENABLE
 #ifdef UART_DEV
   // UART
   IOCON_PinMuxSet(IOCON, UART_RX_PINMUX);
@@ -174,26 +212,56 @@ void board_init(void)
   uart_config.enableRx     = true;
   USART_Init(UART_DEV, &uart_config, 12000000);
 #endif
+#endif
 
+#if defined(CPU_LPC5536JBD100)
+  // USB VBUS
+  /* PORT1 PIN33 configured as USB0_VBUS */
+
+  const uint32_t port1_pin31_config = (/* Pin is configured as USB0_VBUS */
+                                       IOCON_PIO_FUNC7 |
+                                       /* No addition pin function */
+                                       IOCON_PIO_MODE_INACT |
+                                       /* Standard mode, output slew rate control is enabled */
+                                       IOCON_PIO_SLEW_STANDARD |
+                                       /* Input function is not inverted */
+                                       IOCON_PIO_INV_DI |
+                                       /* Enables digital function */
+                                       IOCON_PIO_DIGITAL_EN |
+                                       /* Open drain is disabled */
+                                       IOCON_PIO_OPENDRAIN_DI);
+
+  /* PORT1 PIN31 (coords: 92) is configured as USB0_VBUS */
+  IOCON_PinMuxSet(IOCON, 1U, 31U, port1_pin31_config);
+#else
   // USB VBUS
   /* PORT0 PIN22 configured as USB0_VBUS */
   IOCON_PinMuxSet(IOCON, 0U, 22U, IOCON_PIO_DIG_FUNC7_EN);
+#endif
 
 #if PORT_SUPPORT_DEVICE(0)
   // Port0 is Full Speed
 
-  /* Turn on USB0 Phy */
-  POWER_DisablePD(kPDRUNCFG_PD_USB0_PHY);
+#if defined(CPU_LPC5536JBD100)
+  POWER_DisablePD(kPDRUNCFG_PD_USBFSPHY);   //Turn on USB0 Phy
+  RESET_PeripheralReset(kUSB0_DEV_RST_SHIFT_RSTn); //Reset the IP to make sure it's in reset state
+#else
+  POWER_DisablePD(kPDRUNCFG_PD_USB0_PHY);     //Turn on USB0 Phy
+  RESET_PeripheralReset(kUSB0D_RST_SHIFT_RSTn);   //Reset the IP to make sure it's in reset state
+#endif
 
-  /* reset the IP to make sure it's in reset state. */
-  RESET_PeripheralReset(kUSB0D_RST_SHIFT_RSTn);
   RESET_PeripheralReset(kUSB0HSL_RST_SHIFT_RSTn);
   RESET_PeripheralReset(kUSB0HMR_RST_SHIFT_RSTn);
 
   // Enable USB Clock Adjustments to trim the FRO for the full speed controller
   ANACTRL->FRO192M_CTRL |= ANACTRL_FRO192M_CTRL_USBCLKADJ_MASK;
   CLOCK_SetClkDiv(kCLOCK_DivUsb0Clk, 1, false);
+
+#if defined(CPU_LPC5536JBD100)
+  CLOCK_AttachClk(kFRO_HF_to_USB0);
+#else
   CLOCK_AttachClk(kFRO_HF_to_USB0_CLK);
+#endif
 
   /*According to reference manual, device mode setting has to be set by access usb host register */
   CLOCK_EnableClock(kCLOCK_Usbhsl0);  // enable usb0 host clock
@@ -252,24 +320,33 @@ void board_init(void)
 
 void board_led_write(bool state)
 {
+#if LED_ENABLE
   GPIO_PinWrite(GPIO, LED_PORT, LED_PIN, state ? LED_STATE_ON : (1-LED_STATE_ON));
+#endif
 
-#ifdef NEOPIXEL_PIN
+#if NEOPIXEL_NUMBER
   if (state) {
-    sctpix_setPixel(NEOPIXEL_CH, 0, 0x100000);
-    sctpix_setPixel(NEOPIXEL_CH, 1, 0x101010);
+    sctpix_setPixel(NEOPIXEL_CH, 0, 0xFF0000);
+    sctpix_setPixel(NEOPIXEL_CH, 1, 0xFF0000);
+    sctpix_setPixel(NEOPIXEL_CH, 2, 0xFF0000);
   } else {
-    sctpix_setPixel(NEOPIXEL_CH, 0, 0x001000);
-    sctpix_setPixel(NEOPIXEL_CH, 1, 0x000010);
+    sctpix_setPixel(NEOPIXEL_CH, 0, 0x000000);
+    sctpix_setPixel(NEOPIXEL_CH, 1, 0x000000);
+    sctpix_setPixel(NEOPIXEL_CH, 2, 0x000000);
   }
   sctpix_show();
+
 #endif
 }
 
 uint32_t board_button_read(void)
 {
+#if BUTTON_ENABLE
   // active low
   return BUTTON_STATE_ACTIVE == GPIO_PinRead(GPIO, BUTTON_PORT, BUTTON_PIN);
+#else
+  return 0;
+#endif
 }
 
 int board_uart_read(uint8_t* buf, int len)
@@ -280,7 +357,9 @@ int board_uart_read(uint8_t* buf, int len)
 
 int board_uart_write(void const * buf, int len)
 {
+#if UART_ENABLE
   USART_WriteBlocking(UART_DEV, (uint8_t const *) buf, len);
+#endif
   return len;
 }
 
