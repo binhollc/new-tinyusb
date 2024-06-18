@@ -57,7 +57,7 @@
 //--------------------------------------------------------------------+
 
  // Number of neopixels
-#define NEOPIXEL_NUMBER       1
+#define NEOPIXEL_NUMBER       0
 #define NEOPIXEL_PORT         1
 #define NEOPIXEL_PIN          8
 #define NEOPIXEL_IOMUX        IOCON_PIO_DIG_FUNC4_EN
@@ -65,7 +65,7 @@
 #define NEOPIXEL_TYPE         0
 
 // Brightness percentage from 1 to 255
-#define NEOPIXEL_BRIGHTNESS   0X50
+#define NEOPIXEL_BRIGHTNESS   0XF0
 
 #ifdef __cplusplus
  }

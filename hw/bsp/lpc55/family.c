@@ -160,13 +160,17 @@ void board_init(void)
 
   // Init 150 MHz clock from PLL0 and internal FRO12M oscillator.
   BootClockPLL150MFromFRO12M();
-
-  // 1ms tick timer
+#if CFG_TUSB_OS == OPT_OS_NONE
+// 1ms tick timer
   SysTick_Config(SystemCoreClock / 1000);
 
-#if CFG_TUSB_OS == OPT_OS_FREERTOS
+#elif CFG_TUSB_OS == OPT_OS_FREERTOS
+#if PORT_SUPPORT_DEVICE(0)
   // If freeRTOS is used, IRQ priority is limit by max syscall ( smaller is higher )
   NVIC_SetPriority(USB0_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY );
+#elif PORT_SUPPORT_DEVICE(1)
+  NVIC_SetPriority(USB1_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY );
+#endif
 #endif
 
   // Init all GPIO ports
