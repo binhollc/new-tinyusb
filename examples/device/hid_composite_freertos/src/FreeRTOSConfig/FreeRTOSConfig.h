@@ -48,7 +48,7 @@
 // Include MCU header
 #include "bsp/board_mcu.h"
 
-#if CFG_TUSB_MCU == OPT_MCU_ESP32S2 || CFG_TUSB_MCU == OPT_MCU_ESP32S3
+#if TUSB_MCU_VENDOR_ESPRESSIF
   #error "ESP32-Sx should use IDF's FreeRTOSConfig.h"
 #endif
 
@@ -67,6 +67,7 @@
 #define configENABLE_FPU								        1
 #define configENABLE_TRUSTZONE					        0
 #define configMINIMAL_SECURE_STACK_SIZE					( 1024 )
+#define configRUN_FREERTOS_SECURE_ONLY          1
 
 #define configUSE_PREEMPTION                    1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
