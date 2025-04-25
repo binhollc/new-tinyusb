@@ -99,7 +99,6 @@ include $(TOP)/src/tinyusb.mk
 SRC_C += $(TINYUSB_SRC_C)
 
 # Include all source C in family & board folder
-SRC_C += hw/bsp/board.c
 SRC_C += $(subst $(TOP)/,,$(wildcard $(TOP)/$(BOARD_PATH)/*.c))
 
 INC += \
