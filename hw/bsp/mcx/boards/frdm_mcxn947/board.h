@@ -32,18 +32,21 @@
 #endif
 
 // LED
+#define LED_ENABLED           0
 #define LED_GPIO              GPIO0
 #define LED_CLK               kCLOCK_Gpio0
 #define LED_PIN               10 // red
 #define LED_STATE_ON          0
 
 // WAKE button (Dummy, use unused pin
+#define BUTTON_ENABLED        0
 #define BUTTON_GPIO           GPIO0
 #define BUTTON_CLK            kCLOCK_Gpio0
 #define BUTTON_PIN            23
 #define BUTTON_STATE_ACTIVE   0
 
 // UART
+#define UART_ENABLED          0
 #define UART_DEV              LPUART4
 
 static inline void board_uart_init_clock(void) {
