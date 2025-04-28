@@ -36,7 +36,6 @@
 
 #if NEOPIXEL_NUMBER
 #include "sct_neopixel.h"
-static uint32_t pixelData[NEOPIXEL_NUMBER] = {0};
 #endif
 
 #ifdef BOARD_TUD_RHPORT
@@ -74,50 +73,32 @@ static uint32_t pixelData[NEOPIXEL_NUMBER] = {0};
 //--------------------------------------------------------------------+
 // Forward USB interrupt events to TinyUSB IRQ Handler
 //--------------------------------------------------------------------+
-void USB0_IRQHandler(void)
-{
-  tud_int_handler(0);
+void USB0_IRQHandler(void) {
+  tusb_int_handler(0, true);
 }
 
-void USB1_IRQHandler(void)
-{
-  tud_int_handler(1);
+void USB1_IRQHandler(void) {
+  tusb_int_handler(1, true);
 }
 
 /****************************************************************
-name: BOARD_BootClockFROHF96M
+name: BOARD_BootClockPLL100M
 outputs:
-- {id: SYSTICK_clock.outFreq, value: 96 MHz}
-- {id: System_clock.outFreq, value: 96 MHz}
+- {id: System_clock.outFreq, value: 100 MHz}
 settings:
-- {id: SYSCON.MAINCLKSELA.sel, value: SYSCON.fro_hf}
+- {id: PLL0_Mode, value: Normal}
+- {id: ANALOG_CONTROL_FRO192M_CTRL_ENDI_FRO_96M_CFG, value: Enable}
+- {id: ENABLE_CLKIN_ENA, value: Enabled}
+- {id: ENABLE_SYSTEM_CLK_OUT, value: Enabled}
+- {id: SYSCON.MAINCLKSELB.sel, value: SYSCON.PLL0_BYPASS}
+- {id: SYSCON.PLL0CLKSEL.sel, value: SYSCON.CLK_IN_EN}
+- {id: SYSCON.PLL0M_MULT.scale, value: '100', locked: true}
+- {id: SYSCON.PLL0N_DIV.scale, value: '4', locked: true}
+- {id: SYSCON.PLL0_PDEC.scale, value: '4', locked: true}
 sources:
-- {id: SYSCON.fro_hf.outFreq, value: 96 MHz}
+- {id: ANACTRL.fro_hf.outFreq, value: 96 MHz}
+- {id: SYSCON.XTAL32M.outFreq, value: 16 MHz, enabled: true}
 ******************************************************************/
-void BootClockFROHF96M(void)
-{
-  /*!< Set up the clock sources */
-  /*!< Set up FRO */
-  POWER_DisablePD(kPDRUNCFG_PD_FRO192M); /*!< Ensure FRO is on  */
-  CLOCK_SetupFROClocking(12000000U);     /*!< Set up FRO to the 12 MHz, just for sure */
-  CLOCK_AttachClk(kFRO12M_to_MAIN_CLK); /*!< Switch to FRO 12MHz first to ensure we can change voltage without
-                                             accidentally being below the voltage for current speed */
-
-  CLOCK_SetupFROClocking(96000000U); /*!< Set up high frequency FRO output to selected frequency */
-
-  POWER_SetVoltageForFreq(96000000U); /*!< Set voltage for the one of the fastest clock outputs: System clock output */
-  CLOCK_SetFLASHAccessCyclesForFreq(96000000U); /*!< Set FLASH wait states for core */
-
-  /*!< Set up dividers */
-  CLOCK_SetClkDiv(kCLOCK_DivAhbClk, 1U, false);     /*!< Set AHBCLKDIV divider to value 1 */
-
-  /*!< Set up clock selectors - Attach clocks to the peripheries */
-  CLOCK_AttachClk(kFRO_HF_to_MAIN_CLK); /*!< Switch MAIN_CLK to FRO_HF */
-
-  /*!< Set SystemCoreClock variable. */
-  SystemCoreClock = 96000000U;
-}
-
 void BootClockPLL150MFromFRO12M(void)
 {
     /*!< Set up the clock sources */
@@ -153,19 +134,22 @@ void BootClockPLL150MFromFRO12M(void)
     SystemCoreClock = 150000000U;
 }
 
-void board_init(void)
-{
+void board_init(void) {
   // Enable IOCON clock
   CLOCK_EnableClock(kCLOCK_Iocon);
 
   // Init 150 MHz clock from PLL0 and internal FRO12M oscillator.
   BootClockPLL150MFromFRO12M();
+
 #if CFG_TUSB_OS == OPT_OS_NONE
 // 1ms tick timer
   SysTick_Config(SystemCoreClock / 1000);
 
 #elif CFG_TUSB_OS == OPT_OS_FREERTOS
 #if PORT_SUPPORT_DEVICE(0)
+  // Explicitly disable systick to prevent its ISR runs before scheduler start
+  SysTick->CTRL &= ~1U;
+
   // If freeRTOS is used, IRQ priority is limit by max syscall ( smaller is higher )
   NVIC_SetPriority(USB0_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY );
 #elif PORT_SUPPORT_DEVICE(1)
@@ -180,7 +164,7 @@ void board_init(void)
   // LED
 #if LED_ENABLE
   IOCON_PinMuxSet(IOCON, LED_PORT, LED_PIN, IOCON_PIO_DIG_FUNC0_EN);
-  gpio_pin_config_t const led_config = { kGPIO_DigitalOutput, 1};
+  gpio_pin_config_t const led_config = {kGPIO_DigitalOutput, 1};
   GPIO_PinInit(GPIO, LED_PORT, LED_PIN, &led_config);
 #endif
 
@@ -197,7 +181,7 @@ void board_init(void)
   // Button
 #if BUTTON_ENABLE
   IOCON_PinMuxSet(IOCON, BUTTON_PORT, BUTTON_PIN, IOCON_PIO_DIG_FUNC0_EN);
-  gpio_pin_config_t const button_config = { kGPIO_DigitalInput, 0};
+  gpio_pin_config_t const button_config = {kGPIO_DigitalInput, 0};
   GPIO_PinInit(GPIO, BUTTON_PORT, BUTTON_PIN, &button_config);
 #endif
 
@@ -212,8 +196,8 @@ void board_init(void)
   usart_config_t uart_config;
   USART_GetDefaultConfig(&uart_config);
   uart_config.baudRate_Bps = CFG_BOARD_UART_BAUDRATE;
-  uart_config.enableTx     = true;
-  uart_config.enableRx     = true;
+  uart_config.enableTx = true;
+  uart_config.enableRx = true;
   USART_Init(UART_DEV, &uart_config, 12000000);
 #endif
 #endif
@@ -243,7 +227,7 @@ void board_init(void)
   IOCON_PinMuxSet(IOCON, 0U, 22U, IOCON_PIO_DIG_FUNC7_EN);
 #endif
 
-#if PORT_SUPPORT_DEVICE(0)
+#if defined(BOARD_TUD_RHPORT)  && BOARD_TUD_RHPORT == 0
   // Port0 is Full Speed
 
 #if defined(CPU_LPC5536JBD100)
@@ -276,7 +260,7 @@ void board_init(void)
   CLOCK_EnableUsbfs0DeviceClock(kCLOCK_UsbfsSrcFro, CLOCK_GetFreq(kCLOCK_FroHf));
 #endif
 
-#if PORT_SUPPORT_DEVICE(1)
+#if defined(BOARD_TUD_RHPORT)  && BOARD_TUD_RHPORT == 1
   // Port1 is High Speed
 
   /* Turn on USB1 Phy */
@@ -315,6 +299,10 @@ void board_init(void)
 //  phytx &= ~(USBPHY_TX_D_CAL_MASK | USBPHY_TX_TXCAL45DM_MASK | USBPHY_TX_TXCAL45DP_MASK);
 //  phytx |= USBPHY_TX_D_CAL(0x0C) | USBPHY_TX_TXCAL45DP(0x06) | USBPHY_TX_TXCAL45DM(0x06);
 //  USBPHY->TX = phytx;
+
+    ARM_MPU_SetMemAttr(0, 0x44); // Normal memory, non-cacheable (inner and outer)
+    ARM_MPU_SetRegion(0, ARM_MPU_RBAR(0x40100000, ARM_MPU_SH_NON, 0, 1, 1), ARM_MPU_RLAR(0x40104000, 0));
+    ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk | MPU_CTRL_HFNMIENA_Msk);
 #endif
 }
 
@@ -353,9 +341,9 @@ uint32_t board_button_read(void)
 #endif
 }
 
-int board_uart_read(uint8_t* buf, int len)
-{
-  (void) buf; (void) len;
+int board_uart_read(uint8_t* buf, int len) {
+  (void) buf;
+  (void) len;
   return 0;
 }
 
@@ -369,13 +357,32 @@ int board_uart_write(void const * buf, int len)
 
 #if CFG_TUSB_OS == OPT_OS_NONE
 volatile uint32_t system_ticks = 0;
-void SysTick_Handler(void)
-{
+
+void SysTick_Handler(void) {
   system_ticks++;
 }
 
-uint32_t board_millis(void)
-{
+uint32_t board_millis(void) {
   return system_ticks;
 }
+#endif
+
+
+#ifndef __ICCARM__
+// Implement _start() since we use linker flag '-nostartfiles'.
+// Requires defined __STARTUP_CLEAR_BSS,
+extern int main(void);
+
+TU_ATTR_UNUSED void _start(void) {
+  // called by startup code
+  main();
+  while (1) {}
+}
+
+#ifdef __clang__
+void	_exit (int __status) {
+  while (1) {}
+}
+#endif
+
 #endif
