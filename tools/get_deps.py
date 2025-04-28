@@ -56,7 +56,7 @@ deps_optional = {
                            'b41cf930e65c734d8ec6de04f1d57d46787c76ae',
                            'lpc11 lpc13 lpc15 lpc17 lpc18 lpc40 lpc43'],
     'hw/mcu/nxp/mcux-sdk': ['https://github.com/nxp-mcuxpresso/mcux-sdk.git',
-                           'f6c93eeb2372410019006fbf16a667ed79e44d86',
+                           '0420001d787c2c7bb062a2da4c46233d9daf2737',
                            'kinetis_k kinetis_k32l2 kinetis_kl lpc51 lpc54 lpc55 mcx imxrt'],
     'hw/mcu/raspberry_pi/Pico-PIO-USB': ['https://github.com/sekigon-gonnoc/Pico-PIO-USB.git',
                                          'fe9133fc513b82cc3dc62c67cb51f2339cf29ef7',

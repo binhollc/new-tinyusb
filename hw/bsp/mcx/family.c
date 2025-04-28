@@ -74,10 +74,12 @@ void board_init(void) {
 #endif
 
   // LED
+#if LED_ENABLED
   CLOCK_EnableClock(LED_CLK);
   gpio_pin_config_t led_config = {kGPIO_DigitalOutput, 0};
   GPIO_PinInit(LED_GPIO, LED_PIN, &led_config);
   board_led_write(0);
+#endif
 
 #ifdef NEOPIXEL_PIN
   // Neopixel
@@ -92,12 +94,15 @@ void board_init(void) {
 #endif
 
   // Button
+#if BUTTON_ENABLED
 #ifdef BUTTON_GPIO
   CLOCK_EnableClock(BUTTON_CLK);
   gpio_pin_config_t const button_config = {kGPIO_DigitalInput, 0};
   GPIO_PinInit(BUTTON_GPIO, BUTTON_PIN, &button_config);
 #endif
+#endif
 
+#if UART_ENABLED
 #ifdef UART_DEV
   // UART
 //  IOCON_PinMuxSet(IOCON, UART_RX_PINMUX);
@@ -112,6 +117,7 @@ void board_init(void) {
   uart_config.enableTx = true;
   uart_config.enableRx = true;
   LPUART_Init(UART_DEV, &uart_config, 12000000u);
+#endif
 #endif
 
   // USB VBUS
