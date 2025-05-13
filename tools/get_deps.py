@@ -178,11 +178,8 @@ deps_optional = {
                     'imxrt kinetis_k32l2 kinetis_kl lpc51 lpc54 lpc55 mcx mm32 msp432e4 nrf ra saml2x'
                     'stm32f0 stm32f1 stm32f2 stm32f3 stm32f4 stm32f7 stm32g0 stm32g4 stm32h5'
                     'stm32h7 stm32l0 stm32l1 stm32l4 stm32l5 stm32u5 stm32wb'],
-    'lib/sct_neopixel': ['https://github.com/gsteiert/sct_neopixel.git',
-                         'e73e04ca63495672d955f9268e003cffe168fcd8',
-                         'lpc55'],
     'lib/sct_neopixel-binho': ['https://github.com/binhollc/sct_neopixel-binho.git',
-                         '0a1c48eafe208dd015e561bcf526022fc57d0863',
+                         'd617a2d2841e6085918876ddabcd0367855147f5',
                          'lpc55'],
 }
 
