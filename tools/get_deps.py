@@ -179,7 +179,7 @@ deps_optional = {
                     'stm32f0 stm32f1 stm32f2 stm32f3 stm32f4 stm32f7 stm32g0 stm32g4 stm32h5'
                     'stm32h7 stm32l0 stm32l1 stm32l4 stm32l5 stm32u5 stm32wb'],
     'lib/sct_neopixel-binho': ['https://github.com/binhollc/sct_neopixel-binho.git',
-                         'd617a2d2841e6085918876ddabcd0367855147f5',
+                         '2bb2bae5614fe0fdfc94711d909a4dc44d098d4b',
                          'lpc55'],
 }
 
