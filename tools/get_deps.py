@@ -204,11 +204,8 @@ deps_optional = {
     'lib/CMSIS_6': ['https://github.com/ARM-software/CMSIS_6.git',
                     'b0bbb0423b278ca632cfe1474eb227961d835fd2',
                     'ra'],
-    'lib/sct_neopixel': ['https://github.com/gsteiert/sct_neopixel.git',
-                         'e73e04ca63495672d955f9268e003cffe168fcd8',
-                         'lpc55'],
     'lib/sct_neopixel-binho': ['https://github.com/binhollc/sct_neopixel-binho.git',
-                         '0a1c48eafe208dd015e561bcf526022fc57d0863',
+                         '2bb2bae5614fe0fdfc94711d909a4dc44d098d4b',
                          'lpc55'],
 }
 
