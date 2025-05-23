@@ -50,7 +50,7 @@ SRC_C += \
 
 INC += \
 	$(TOP)/$(BOARD_PATH) \
-	$(TOP)/lib/sct_neopixel \
+	$(TOP)/lib/sct_neopixel-binho \
 	$(TOP)/lib/CMSIS_5/CMSIS/Core/Include \
 	$(TOP)/$(MCU_DIR) \
 	$(TOP)/$(MCU_DIR)/drivers \
