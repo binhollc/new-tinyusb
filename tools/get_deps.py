@@ -205,7 +205,7 @@ deps_optional = {
                     'b0bbb0423b278ca632cfe1474eb227961d835fd2',
                     'ra'],
     'lib/sct_neopixel-binho': ['https://github.com/binhollc/sct_neopixel-binho.git',
-                         '2bb2bae5614fe0fdfc94711d909a4dc44d098d4b',
+                         'aee0683b13a24bf2695ec089aff1d472d94664ab',
                          'lpc55'],
 }
 
